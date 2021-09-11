@@ -3,33 +3,33 @@ import torch
 
 
 class AbstractGan(ABC, torch.nn.Module):
-    def __init__(self, h_size, z_size, learning_rate=1e-3):
+    def __init__(self, h_size, z_size, learning_rate=1e-3, n_features=1):
         super().__init__()
         self.h_size = h_size
         self.z_size = z_size
 
         self.G = torch.nn.Sequential(
             torch.nn.Linear(z_size, h_size),
-            torch.nn.ReLU(),
+            torch.nn.SELU(),
 
             torch.nn.Linear(h_size, h_size),
-            torch.nn.ReLU(),
+            torch.nn.SELU(),
 
             torch.nn.Linear(h_size, h_size),
-            torch.nn.ReLU(),
+            torch.nn.SELU(),
 
-            torch.nn.Linear(h_size, 1)
+            torch.nn.Linear(h_size, n_features)
         )
 
         self.D = torch.nn.Sequential(
-            torch.nn.Linear(1, h_size),
-            torch.nn.LeakyReLU(),
+            torch.nn.Linear(n_features, h_size),
+            torch.nn.SELU(),
 
             torch.nn.Linear(h_size, h_size),
-            torch.nn.LeakyReLU(),
+            torch.nn.SELU(),
 
             torch.nn.Linear(h_size, h_size),
-            torch.nn.LeakyReLU(),
+            torch.nn.SELU(),
 
             torch.nn.Linear(h_size, 1)
         )
