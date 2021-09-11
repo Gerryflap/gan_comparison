@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 
 from gans.abstract_gan import AbstractGan
 from gans.ns_gan import NonSaturatingGan
+from gans.r1_gan import R1Gan
 from gans.vanilla_gan import VanillaGan
 from util import evaluation
 from util.multi_mode_dataset import MultiModeDataset
@@ -13,7 +14,7 @@ from util.random_dataset import NormalRandomDataset
 import matplotlib.pyplot as plt
 
 h_size = 64
-z_size = 12
+z_size = 8
 lr = 1e-4
 n_bins = 40
 bin_range = (-4, 4)
@@ -21,14 +22,17 @@ cuda = True
 
 algorithms = {
     "GAN": VanillaGan(h_size, z_size, learning_rate=lr),
-    "NS-GAN": NonSaturatingGan(h_size, z_size, learning_rate=lr)
+    "NS-GAN": NonSaturatingGan(h_size, z_size, learning_rate=lr),
+    "R1 NS-GAN γ=10": R1Gan(h_size, z_size, learning_rate=lr, gamma=10.0),
+    "R1 NS-GAN γ=2": R1Gan(h_size, z_size, learning_rate=lr, gamma=2.0),
+    "R1 GAN γ=2": R1Gan(h_size, z_size, learning_rate=lr, gamma=2.0, non_saturating=False),
 }
 if cuda:
     for name in algorithms.keys():
         algorithms[name] = algorithms[name].cuda()
 
 # dataset = MultiNormalDataset(mean1=1.5, std1=0.8, mean2=-1.5, std2=0.5)
-dataset = MultiModeDataset([-2.5, -1.5, -0.5, 0.5, 1.5, 2.5], size_per_mode=2000, stddev=0.2)
+dataset = MultiModeDataset([-2.5, -1.5, -0.5, 0.5, 1.5, 2.5], size_per_mode=2000, stddev=0.4)
 dataloader = DataLoader(dataset, batch_size=64, shuffle=True, drop_last=True)
 js_divergence_values = defaultdict(lambda: [])
 step_values = []

@@ -15,11 +15,17 @@ class AbstractGan(ABC, torch.nn.Module):
             torch.nn.Linear(h_size, h_size),
             torch.nn.ReLU(),
 
+            torch.nn.Linear(h_size, h_size),
+            torch.nn.ReLU(),
+
             torch.nn.Linear(h_size, 1)
         )
 
         self.D = torch.nn.Sequential(
             torch.nn.Linear(1, h_size),
+            torch.nn.LeakyReLU(),
+
+            torch.nn.Linear(h_size, h_size),
             torch.nn.LeakyReLU(),
 
             torch.nn.Linear(h_size, h_size),
