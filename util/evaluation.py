@@ -23,6 +23,81 @@ def binned_jsd(real_data, gan: AbstractGan, n_bins, bin_range=(-4, 4)):
 
     bin_step_size = (bin_range[1] - bin_range[0]) / n_bins
 
+    # Clamp all values between the bin ranges
+    generated_data = torch.clamp(generated_data, min=bin_range[0], max=bin_range[1] - bin_step_size)
+    real_data = torch.clamp(real_data, min=bin_range[0], max=bin_range[1] - bin_step_size)
+
+    # Compute the respective bin index for each value
+    generated_data = torch.floor((generated_data - bin_range[0]) / bin_step_size).to(torch.int32).cpu()
+    real_data = torch.floor((real_data - bin_range[0]) / bin_step_size).to(torch.int32).cpu()
+
+    for i in range(n_samples):
+        gen_bin_counts[generated_data[i].item()] += 1
+        real_bin_counts[real_data[i].item()] += 1
+
+    p_real = real_bin_counts / n_samples
+    p_gen = gen_bin_counts / n_samples
+    return discrete_jensen_shannon_divergence(p_gen, p_real)
+
+
+def binned_jsd_2d(real_data, gan: AbstractGan, n_bins, bin_range=(-4, 4)):
+    """
+    Approximates the Jensen-Shannon divergence between the real and generated data using discrete bins
+    :param real_data: An array containing samples from the real distribution
+    :param gan: The GAN model approximating the real distribution
+    :param n_bins_over_1_axis: The number of bins used to approximate the JSD over both axes.
+        Ie. when this is set to 4, 4x4 bins will be used to divide up the space
+        More bins != more better unless you also increase the amount of samples
+    :param bin_range: The range spanned by the bins (n_bins are spread over this distance).
+        Samples outside of this range are counted into the bins on the edges of the range
+    :return: An approximation of the Jensen-Shannon divergence between the real and generated samples
+    """
+    n_samples = real_data.size(0)
+
+    # Generate the same amount of samples as the real data contains
+    generated_data = gan.generate_batch(n_samples)
+    real_bin_counts = torch.zeros((n_bins, n_bins), dtype=torch.float32)
+    gen_bin_counts = torch.zeros((n_bins, n_bins), dtype=torch.float32)
+
+    bin_step_size = (bin_range[1] - bin_range[0]) / n_bins
+
+    # Clamp all values between the bin ranges
+    generated_data = torch.clamp(generated_data, min=bin_range[0], max=bin_range[1] - bin_step_size)
+    real_data = torch.clamp(real_data, min=bin_range[0], max=bin_range[1] - bin_step_size)
+
+    # Compute the respective bin index for each value
+    generated_data = torch.floor((generated_data - bin_range[0]) / bin_step_size).to(torch.int32).cpu()
+    real_data = torch.floor((real_data - bin_range[0]) / bin_step_size).to(torch.int32).cpu()
+
+    for i in range(n_samples):
+        gen_bin_counts[generated_data[i, 0].item(), generated_data[i, 1].item()] += 1
+        real_bin_counts[real_data[i, 0].item(), real_data[i, 1].item()] += 1
+
+    p_real = real_bin_counts.view(-1) / n_samples
+    p_gen = gen_bin_counts.view(-1) / n_samples
+    return discrete_jensen_shannon_divergence(p_gen, p_real)
+
+
+def binned_jsd_old(real_data, gan: AbstractGan, n_bins, bin_range=(-4, 4)):
+    """
+    Approximates the Jensen-Shannon divergence between the real and generated data using n_bins discrete bins
+    :param real_data: An array containing samples from the real distribution
+    :param gan: The GAN model approximating the real distribution
+    :param n_bins: The number of bins used to approximate the JSD.
+        More bins != more better unless you also increase the amount of samples
+    :param bin_range: The range spanned by the bins (n_bins are spread over this distance).
+        Samples outside of this range are counted into the bins on the edges of the range
+    :return: An approximation of the Jensen-Shannon divergence between the real and generated samples
+    """
+    n_samples = real_data.size(0)
+
+    # Generate the same amount of samples as the real data contains
+    generated_data = gan.generate_batch(n_samples)
+    real_bin_counts = torch.zeros((n_bins,), dtype=torch.float32)
+    gen_bin_counts = torch.zeros((n_bins,), dtype=torch.float32)
+
+    bin_step_size = (bin_range[1] - bin_range[0]) / n_bins
+
     for bin_i in range(n_bins):
         lower_bound = bin_range[0] + bin_step_size * bin_i
         higher_bound = lower_bound + bin_step_size
@@ -48,7 +123,7 @@ def binned_jsd(real_data, gan: AbstractGan, n_bins, bin_range=(-4, 4)):
     return discrete_jensen_shannon_divergence(p_gen, p_real)
 
 
-def binned_jsd_2d(real_data, gan: AbstractGan, n_bins_over_1_axis, bin_range=(-4, 4)):
+def binned_jsd_2d_old(real_data, gan: AbstractGan, n_bins_over_1_axis, bin_range=(-4, 4)):
     """
     Approximates the Jensen-Shannon divergence between the real and generated data using discrete bins
     :param real_data: An array containing samples from the real distribution

@@ -1,22 +1,26 @@
 import torch
+from torch.optim import RMSprop
 
 from gans.abstract_gan import AbstractGan
 
 
 class WGan(AbstractGan):
     """
-        Combination of WGAN objective and R1 regularization (gradient penalty) https://arxiv.org/abs/1801.04406v4
+        Wasserstein GAN https://arxiv.org/pdf/1701.07875.pdf
     """
 
     def __init__(self, h_size, z_size, n_features=1, learning_rate=1e-3, clip=0.01):
-        super().__init__(h_size, z_size, n_features=n_features, learning_rate=learning_rate)
+        super().__init__(h_size, z_size, n_features=n_features, learning_rate=learning_rate, use_batchnorm=False)
         self.clip = clip
         self.step = 0
+
+        # WGAN uses RMSProp, which supposedly influences the stability
+        self.opt_G = RMSprop(self.G.parameters(), lr=learning_rate)
+        self.opt_D = RMSprop(self.D.parameters(), lr=learning_rate)
 
     def _train_step(self, real_batch):
         # Train D
         generated_batch = self.generate_batch(real_batch.size(0)).detach()
-        generated_batch.requires_grad = True
 
         pred_real = self.D(real_batch)
         pred_fake = self.D(generated_batch)
@@ -33,7 +37,7 @@ class WGan(AbstractGan):
         if self.step%5 == 0:
             # Train G
             generated_batch = self.generate_batch(real_batch.size(0))
-            pred_fake = torch.sigmoid(self.D(generated_batch))
+            pred_fake = self.D(generated_batch)
 
             loss_G = self._generator_loss(pred_fake)
             self.opt_G.zero_grad()
