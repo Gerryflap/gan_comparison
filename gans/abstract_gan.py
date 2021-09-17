@@ -73,8 +73,9 @@ class AbstractGan(ABC, torch.nn.Module):
 
     def train_step(self, real_batch):
         self.train()
-        device = next(self.G.parameters()).device
-        real_batch = real_batch.to(device)
+        if not real_batch.is_cuda:
+            device = next(self.G.parameters()).device
+            real_batch = real_batch.to(device)
         self._train_step(real_batch)
         self.eval()
 

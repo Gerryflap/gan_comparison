@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+import torch
 from torch.utils.data import DataLoader
 
 from gans.abstract_gan import AbstractGan
@@ -16,23 +17,23 @@ import matplotlib.pyplot as plt
 
 from util.datasets.one_dim.random_dataset import NormalRandomDataset
 
-h_size = 128
-z_size = 64
+h_size = 512
+z_size = 256
 lr = 5e-5
 n_bins = 120
 bin_range = (-2, 2)
 cuda = True
 
 algorithms = {
-    "GAN": VanillaGan(h_size, z_size, learning_rate=lr),
+    # "GAN": VanillaGan(h_size, z_size, learning_rate=lr),
     "NS-GAN": NonSaturatingGan(h_size, z_size, learning_rate=lr),
     "R1 NS-GAN γ=10": R1Gan(h_size, z_size, learning_rate=lr, gamma=10.0),
-    "WGAN": WGan(h_size, z_size, learning_rate=lr),
+    # "WGAN": WGan(h_size, z_size, learning_rate=lr),
     "WGAN-GP": WGanGP(h_size, z_size, learning_rate=lr, lambd=10.0),
-    "NS-GAN BN": NonSaturatingGan(h_size, z_size, learning_rate=lr, use_batchnorm=True),
-    "R1 NS-GAN BN γ=10": R1Gan(h_size, z_size, learning_rate=lr, gamma=10.0, use_batchnorm=True),
-    "WGAN-GP BN Generator": WGanGP(h_size, z_size, learning_rate=lr, lambd=10.0, use_batchnorm=True),
-    "R1 NS-GAN Batch Stats": R1GanBatchStats(h_size, z_size, learning_rate=lr, gamma=10.0),
+    # "NS-GAN BN": NonSaturatingGan(h_size, z_size, learning_rate=lr, use_batchnorm=True),
+    # "R1 NS-GAN BN γ=10": R1Gan(h_size, z_size, learning_rate=lr, gamma=10.0, use_batchnorm=True),
+    # "WGAN-GP BN Generator": WGanGP(h_size, z_size, learning_rate=lr, lambd=10.0, use_batchnorm=True),
+    # "R1 NS-GAN Batch Stats": R1GanBatchStats(h_size, z_size, learning_rate=lr, gamma=10.0),
 
 }
 if cuda:
@@ -54,6 +55,9 @@ steps_taken = 0
 def epoch(epoch_number=None, log_values=False, log_ever_n_steps=100):
     global steps_taken
     for real_batch in dataloader:
+        if cuda:
+            real_batch = real_batch.cuda()
+
         for name, algorithm in algorithms.items():
             algorithm.train_step(real_batch)
 

@@ -14,22 +14,24 @@ from util.datasets.two_dim.circle_of_gaussians_dataset import CircleOfGaussiansD
 from util.datasets.two_dim.multi_normal_dataset import MultiNormalDataset2D
 import matplotlib.pyplot as plt
 
-h_size = 64
-z_size = 32
-lr = 1e-4
+from util.datasets.two_dim.roll_dataset import RollDataset2D
+
+h_size = 256
+z_size = 64
+lr = 5e-5
 n_bins = 20
 bin_range = (-2, 2)
 cuda = True
 
 algorithms = {
     "NS-GAN": NonSaturatingGan(h_size, z_size, n_features=2, learning_rate=lr),
-    "R1 NS-GAN γ=2": R1Gan(h_size, z_size, n_features=2, learning_rate=lr, gamma=2.0),
+    # "R1 NS-GAN γ=2": R1Gan(h_size, z_size, n_features=2, learning_rate=lr, gamma=2.0),
     "R1 NS-GAN γ=10": R1Gan(h_size, z_size, n_features=2, learning_rate=lr),
     "WGAN": WGan(h_size, z_size, n_features=2, learning_rate=lr),
     "WGAN-GP": WGanGP(h_size, z_size, n_features=2, learning_rate=lr),
     # "NS-GAN BN": NonSaturatingGan(h_size, z_size, n_features=2, learning_rate=lr, use_batchnorm=True),
     # "R1 NS-GAN BN γ=2": R1Gan(h_size, z_size, n_features=2, learning_rate=lr, gamma=2.0, use_batchnorm=True),
-    "R1 NS-GAN γ=10 Batch Stats": R1GanBatchStats(h_size, z_size, n_features=2, learning_rate=lr, gamma=10.0),
+    # "R1 NS-GAN γ=10 Batch Stats": R1GanBatchStats(h_size, z_size, n_features=2, learning_rate=lr, gamma=10.0),
 }
 if cuda:
     for name in algorithms.keys():
@@ -37,9 +39,13 @@ if cuda:
 
 # dataset = MultiNormalDataset2D(mean1=(1.5, 1.5), std1=0.5, mean2=(-1.5, -1.5), std2=0.5)
 # testset = MultiNormalDataset2D(mean1=(1.5, 1.5), std1=0.5, mean2=(-1.5, -1.5), std2=0.5, size=200)
-dataset = CircleOfGaussiansDataset2D()
-testset = CircleOfGaussiansDataset2D(size=200)
-dataloader = DataLoader(dataset, batch_size=64, shuffle=True, drop_last=True)
+# dataset = CircleOfGaussiansDataset2D(stddev=0.05)
+# testset = CircleOfGaussiansDataset2D(size=200, stddev=0.05)
+dataset = RollDataset2D(n_times_round=8)
+testset = RollDataset2D(n_times_round=8, size=200)
+
+
+dataloader = DataLoader(dataset, batch_size=64, shuffle=True, drop_last=True, pin_memory=cuda)
 js_divergence_values = defaultdict(lambda: [])
 step_values = []
 
@@ -49,6 +55,9 @@ steps_taken = 0
 def epoch(epoch_number=None, log_values=False, log_ever_n_steps=100):
     global steps_taken
     for real_batch in dataloader:
+        if cuda:
+            real_batch = real_batch.cuda()
+
         for name, algorithm in algorithms.items():
             algorithm.train_step(real_batch)
 
@@ -83,7 +92,7 @@ def generate_comparison(name, algorithm: AbstractGan):
 
 
 try:
-    for epoch_number in range(500):
+    for epoch_number in range(1000):
         epoch(epoch_number, log_values=True, log_ever_n_steps=100)
 except KeyboardInterrupt:
     print("Training interrupted")
