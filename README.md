@@ -67,3 +67,5 @@ My implementation separates the space into N bins and then computes the JSD disc
 
 _JSD plot for the experiments of the videos above, lower is better:_
 ![Here should be an image](results_showcase/1D_results.png)
+
+Note: this plot also includes runs with Batch Normalization (BN) and WGAN-GP with 1 D step per G step (is usually 5).
