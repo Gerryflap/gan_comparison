@@ -199,10 +199,8 @@ def discrete_kullback_leibler_divergence(p1, p2):
     :param p2: The second probability distribution
     :return: D_KL( p1 || p2 )
     """
-    summands = p1 * torch.log(p1 / p2)
-
-    # Resolve any Nan values. This solution may be incorrect when p1 is 0 and p2 is not
-    summands[torch.isnan(summands)] = 0.0
+    eps = 1e-10
+    summands = p1 * torch.log((p1 + eps) / (p2 + eps))
 
     return torch.sum(summands)
 

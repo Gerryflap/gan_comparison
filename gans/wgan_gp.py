@@ -9,10 +9,11 @@ class WGanGP(AbstractGan):
         Wasserstein GAN with Gradient Penalty https://arxiv.org/pdf/1704.00028.pdf
     """
 
-    def __init__(self, h_size, z_size, n_features=1, learning_rate=1e-3, lambd=10.0, use_batchnorm=False):
+    def __init__(self, h_size, z_size, n_features=1, learning_rate=1e-3, lambd=10.0, use_batchnorm=False, G_step_every=5):
         super().__init__(h_size, z_size, n_features=n_features, learning_rate=learning_rate, use_batchnorm=False)
         self.lambd = lambd
         self.step = 0
+        self.G_step_every = G_step_every
 
         if use_batchnorm:
             self.G = torch.nn.Sequential(
@@ -59,7 +60,7 @@ class WGanGP(AbstractGan):
         loss_D.backward()
         self.opt_D.step()
 
-        if self.step % 5 == 0:
+        if self.step % self.G_step_every == 0:
             # Train G
             generated_batch = self.generate_batch(real_batch.size(0))
             pred_fake = self.D(generated_batch)

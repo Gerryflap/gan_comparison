@@ -54,3 +54,8 @@ class R1Gan(AbstractGan):
             return -torch.mean(torch.log(pred_fake + 1e-6))
         else:
             return torch.mean(torch.log(1.0 - pred_fake + 1e-6))
+
+    def get_discriminator_values_1d(self, range=(-4, 4), steps=100):
+        with torch.no_grad():
+            inp, values = super().get_discriminator_values_1d(range, steps)
+            return inp, torch.sigmoid(values)
