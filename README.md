@@ -1,12 +1,11 @@
 # GAN Comparison
 A project for assessing GAN algorithm performance on simple 1D and 2D datasets.
-Contains the following algorithms:
 
 ## Running
 Install the requirements using `pip install -r requirements.txt`. I recommend you to use a venv for this.
 Then edit `evaluate_algorithms.py` (or the 2D version) and run it with `python evaluate_algorithms.py`.
 
-## Models
+## Algorithms
 ### GAN
 The original Generative Adversarial Networks algorithm proposed in [the GAN paper](https://arxiv.org/abs/1406.2661).
 It introduces a Generator (G) and Discriminator (D) network that play a "game" against each other.
